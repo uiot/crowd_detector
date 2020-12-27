@@ -18,7 +18,8 @@ COLORS = np.random.uniform(0, 255, size=(len(classes), 3))
 # setup net
 net = cv2.dnn.readNet(WEIGHTS_PATH, CFG_PATH)
 
-def detect(image, *, debug=False):
+# def detect(image, *, debug=False):
+def detect(image, *, debug=True):
     """Returns True if any deteciton ocurred,
     and False otherwise.
     If debug is True, returns a second 

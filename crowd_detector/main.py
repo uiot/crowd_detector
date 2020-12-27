@@ -3,6 +3,9 @@ import os
 import logging
 import time
 
+# from detector_utils import detect_crowds
+from yolo_detection import crowd_detect as detect_crowds
+
 
 def fetch_frame(source,max_tries=3):
     ret = False
@@ -17,12 +20,6 @@ def fetch_frame(source,max_tries=3):
     cap.release()
     return frame,ret
 
-def detect(frame):
-    result_frame = frame
-    report = {}
-
-    return result_frame, report
-
 
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
@@ -34,17 +31,22 @@ max_tries = 3
 frame_source = "http://208.139.200.133//mjpg/video.mjpg"
 
 filename = "crowd{}.jpg"
-foldername = "crowd"
+foldername = "result_images"
 
 log_level = "debug"
 
 # setup
-file_path = os.path.join(DIR_PATH,filename)
 folder_path = os.path.join(DIR_PATH,foldername)
+file_path = os.path.join(folder_path,filename)
+
+try:
+    os.mkdir(folder_path)
+except FileExistsError:
+    pass
 
 logging.basicConfig(
     level=log_level.upper(),
-    format='[%(levelname)s] %(message)s : %(asctime)s',
+    format='[%(levelname)s] %(asctime)s : "%(message)s"',
 )
 
 
@@ -61,7 +63,7 @@ try:
             logging.warning(f"failed at fetching frames, tried {max_tries} times")
             break
 
-        marked_frame,_ = detect(frame)
+        _,marked_frame = detect_crowds(frame)
 
         cv2.imwrite(file_path.format(frame_counter),marked_frame)
         logging.info(f"frame {frame_counter+1}/{number_of_frames} saved with success")
