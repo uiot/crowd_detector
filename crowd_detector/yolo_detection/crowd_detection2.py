@@ -8,18 +8,17 @@ import os
 DIR_PATH = os.path.dirname(os.path.realpath(__file__))
 
 CFG_PATH = os.path.join(DIR_PATH, "yolo_files", "yolo.cfg")
-CLASSES_PATH = os.path.join(DIR_PATH, "yolo_files", "yolo_classes.txt")
+CLASSES_PATH = os.path.join(DIR_PATH, "yolo_files", "yolo_classes.txt") 
 WEIGHTS_PATH = os.path.join(DIR_PATH, "yolo_files", "yolo.weights")
 
 SCALE = 0.00392
-CONF_THRESHOLD = 0.3
+CONF_THRESHOLD = 0.4
 NMS_THRESHOLD = 0.5
 
 IGNORE_CLASSES = (
     "teddy bear",
     "donut",
 )
-
 
 threshold = 100
 
@@ -80,30 +79,41 @@ def detect(image, *, debug=True):
     if not debug:
         return False
 
+    #tecnicamente aplica non-max supression, porém não funciona
     indices = cv2.dnn.NMSBoxes(boxes, confidences, CONF_THRESHOLD, NMS_THRESHOLD)
     has_detected = bool(len(indices))
-    #color =0
 
     all_boxes=[]
     for i in indices:
         i = i[0]
         box = boxes[i]
         all_boxes.append(box)
-        '''
+        
         x = box[0]
         y = box[1]
         w = box[2]
         h = box[3]
-        cv2.rectangle(image, (round(x), round(y)), (round(x+w), round(y+h)), color, 2)
-        '''
+        draw_bounding_box(image, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h))   
 
     #it.combinations(all_bouding_boxes, 2)
+    # display output image    
+    cv2.imshow("object detection", image)
 
+    # wait until any key is pressed
+    cv2.waitKey()
+    
+    # save output image to disk
+    cv2.imwrite("object-detection.jpg", image)
+
+    # release resources
+    cv2.destroyAllWindows()
+
+    '''
     dist_boxes = []
     close_boxes = []
 
-    dist_color = (0,255,0)
-    close_color = (0,0,255)
+    dist_color = (0,255,0) #BLUE, GREEN, RED - NESTE CASO VERDE PRA PESSOAS ISOLADAS
+    close_color = (0,0,255) #BLUE, GREEN, RED - NESTE CASO VERMELHO PRA PESSOAS PRÓXIMAS
 
     if len(boxes) == 1:
         cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color)
@@ -130,7 +140,9 @@ def detect(image, *, debug=True):
     #        print(type(b))
         cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color,0)
 
-    return has_detected, image
+    report = {}
+    return image, report
+'''
 
 def __get_output_layers(net):
     
@@ -150,6 +162,17 @@ def isClose(box0,box1):
     pt1 = get_box_center(box1)
     dist = math.sqrt((pt1[0] - pt0[0])**2 + (pt1[1] - pt0[1])**2)  
     return dist <= threshold
+
+def draw_bounding_box(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
+
+    label = str(classes[class_id])
+
+    color = COLORS[class_id]
+
+    cv2.rectangle(img, (x,y), (x_plus_w,y_plus_h), color, 2)
+
+    cv2.putText(img, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
 
 '''
 if __name__ == "__main__":
@@ -186,7 +209,7 @@ if __name__ == "__main__":
     from settings import *
 
     #cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture("http://208.139.200.133//mjpg/video.mjpg")
+    cap = cv2.VideoCapture("http://208.72.70.172/mjpg/1/video.mjpg")
     #s = cap.read().shape
     while True:
         ret, frame = cap.read()

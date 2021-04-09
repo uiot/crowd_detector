@@ -141,7 +141,7 @@ def isClose(box0,box1):
 
 
 def test():
-    frame_source = "http://208.139.200.133//mjpg/video.mjpg"
+    frame_source = "http://208.72.70.172/mjpg/1/video.mjpg"
     cap = cv2.VideoCapture(frame_source)
     
     while True:

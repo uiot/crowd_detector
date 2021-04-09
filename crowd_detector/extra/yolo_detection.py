@@ -99,7 +99,7 @@ if __name__ == "__main__":
     from settings import *
 
     #cap = cv2.VideoCapture(0)
-    cap = cv2.VideoCapture("http://208.139.200.133//mjpg/video.mjpg")
+    cap = cv2.VideoCapture("http://208.72.70.172/mjpg/1/video.mjpg")
 
     while True:
         ret, frame = cap.read()

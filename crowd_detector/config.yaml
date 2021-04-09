@@ -1,0 +1,12 @@
+frame_source: http://114.35.156.187:85/webcapture.jpg?command=snap&channel=1?COUNTER
+
+number_of_frames: 210
+fetch_interval: 3
+max_tries: 3
+
+filename: crowd{}.jpg
+foldername: result_images
+
+reports_filename: reports.json
+
+log_level: debug

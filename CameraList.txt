@@ -1,0 +1,3 @@
+http://158.58.130.148:80/mjpg/video.mjpg - Hotel
+http://208.72.70.172/mjpg/1/video.mjpg - praça aberta
+http://114.35.156.187:85/webcapture.jpg?command=snap&channel=1?COUNTER - Lojinha
