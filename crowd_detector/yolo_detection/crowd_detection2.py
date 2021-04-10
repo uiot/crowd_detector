@@ -79,7 +79,7 @@ def detect(image, *, debug=True):
     if not debug:
         return False
 
-    #tecnicamente aplica non-max supression, porém não funciona
+    #aplica non-max supression
     indices = cv2.dnn.NMSBoxes(boxes, confidences, CONF_THRESHOLD, NMS_THRESHOLD)
     has_detected = bool(len(indices))
 
@@ -93,20 +93,15 @@ def detect(image, *, debug=True):
         y = box[1]
         w = box[2]
         h = box[3]
-        draw_bounding_box(image, class_ids[i], confidences[i], round(x), round(y), round(x+w), round(y+h))   
 
-    #it.combinations(all_bouding_boxes, 2)
-    # display output image    
-    cv2.imshow("object detection", image)
+        label = str(classes[class_ids[i]])
 
-    # wait until any key is pressed
-    cv2.waitKey()
-    
-    # save output image to disk
-    cv2.imwrite("object-detection.jpg", image)
+        color = COLORS[class_ids[i]]
 
-    # release resources
-    cv2.destroyAllWindows()
+        cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), color, 2)
+
+    report = {}
+    return image, report
 
     '''
     dist_boxes = []
@@ -162,17 +157,6 @@ def isClose(box0,box1):
     pt1 = get_box_center(box1)
     dist = math.sqrt((pt1[0] - pt0[0])**2 + (pt1[1] - pt0[1])**2)  
     return dist <= threshold
-
-def draw_bounding_box(img, class_id, confidence, x, y, x_plus_w, y_plus_h):
-
-    label = str(classes[class_id])
-
-    color = COLORS[class_id]
-
-    cv2.rectangle(img, (x,y), (x_plus_w,y_plus_h), color, 2)
-
-    cv2.putText(img, label, (x-10,y-10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
-
 
 '''
 if __name__ == "__main__":
