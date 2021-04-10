@@ -20,7 +20,7 @@ IGNORE_CLASSES = (
     "donut",
 )
 
-threshold = 100
+threshold = 45
 
 
 # read classes
@@ -79,11 +79,28 @@ def detect(image, *, debug=True):
     if not debug:
         return False
 
+    #função para remover caixas repetidas
+    N = len(boxes)
+    boxes_index = []
+    boxes_index = [i for i in range (N)]
+    pop_index = []
+    for a0,a1 in it.combinations(boxes_index,2):
+        if isTooClose(boxes[a0],boxes[a1]):
+            if a1 not in pop_index:
+                pop_index.append(a1)
+
+    pop_index.sort(reverse=True)
+
+    for i in range(len(pop_index)):
+        aux = pop_index[i]
+        boxes.pop(aux)
+    '''
     #aplica non-max supression
     indices = cv2.dnn.NMSBoxes(boxes, confidences, CONF_THRESHOLD, NMS_THRESHOLD)
     has_detected = bool(len(indices))
 
     all_boxes=[]
+    type (indices)
     for i in indices:
         i = i[0]
         box = boxes[i]
@@ -98,17 +115,17 @@ def detect(image, *, debug=True):
 
         color = COLORS[class_ids[i]]
 
-        cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), color, 2)
-
-    report = {}
-    return image, report
-
+        #cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), color, 2)
     '''
     dist_boxes = []
     close_boxes = []
 
     dist_color = (0,255,0) #BLUE, GREEN, RED - NESTE CASO VERDE PRA PESSOAS ISOLADAS
     close_color = (0,0,255) #BLUE, GREEN, RED - NESTE CASO VERMELHO PRA PESSOAS PRÓXIMAS
+
+    if len(boxes) == 0:
+        report = {}
+        return image, report
 
     if len(boxes) == 1:
         cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color)
@@ -127,17 +144,40 @@ def detect(image, *, debug=True):
             dist_boxes.append(b0)
             dist_boxes.append(b1)
 
-    
+   
     for b in close_boxes:
         cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), close_color,3)
     for b in dist_boxes:
-        #print(type(b))
-    #        print(type(b))
         cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color,0)
+    
+    '''
+    #código provisório pois ta acontecendo algum erro com o do marcos
+    if len(boxes) == 1:
+        cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), dist_color, 2)
 
+    image = cv2.line(image, (100,100), (100,100+threshold), dist_color,3) 
+
+    for b0,b1 in it.combinations(boxes,2):
+        if isClose(b0,b1):
+            c0 =get_box_center(b0)
+            c1 = get_box_center(b1)
+            #print(c0,c1)
+            image = cv2.line(image, c0, c1, close_color,3) 
+            close_boxes.append(b0)
+            close_boxes.append(b1)
+        else:
+            dist_boxes.append(b0)
+            dist_boxes.append(b1)
+
+   
+    for b in close_boxes:
+        cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), close_color, 2)
+    for b in dist_boxes:
+        cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), dist_color, 2)
+    '''
     report = {}
     return image, report
-'''
+
 
 def __get_output_layers(net):
     
@@ -156,9 +196,14 @@ def isClose(box0,box1):
     pt0 = get_box_center(box0)
     pt1 = get_box_center(box1)
     dist = math.sqrt((pt1[0] - pt0[0])**2 + (pt1[1] - pt0[1])**2)  
-    return dist <= threshold
+    return (dist <= 200)
 
-'''
+def isTooClose(box0,box1):
+    pt0 = get_box_center(box0)
+    pt1 = get_box_center(box1)
+    dist = math.sqrt((pt1[0] - pt0[0])**2 + (pt1[1] - pt0[1])**2)  
+    return (dist <= 32)
+
 if __name__ == "__main__":
     from settings import *
 
@@ -188,7 +233,7 @@ if __name__ == "__main__":
     out.release()
     cv2.destroyAllWindows()
 
-'''
+
 if __name__ == "__main__":
     from settings import *
 
