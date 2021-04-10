@@ -51,8 +51,7 @@ def detect(image, *, debug=True):
     Height = image.shape[0]
 
     blob = cv2.dnn.blobFromImage(image, SCALE, (416,416), (0,0,0), True, crop=False)
-    
-    #inicia a rede neural para analisar os dados contidos nela
+
     net.setInput(blob)
 
     outs = net.forward(__get_output_layers(net))
@@ -80,7 +79,7 @@ def detect(image, *, debug=True):
     if not debug:
         return False
 
-    #aplica non-max supression (basicamente some com as caixas duplicadas)
+    #aplica non-max supression
     indices = cv2.dnn.NMSBoxes(boxes, confidences, CONF_THRESHOLD, NMS_THRESHOLD)
     has_detected = bool(len(indices))
 
@@ -99,9 +98,12 @@ def detect(image, *, debug=True):
 
         color = COLORS[class_ids[i]]
 
-        cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), (0,255,0), 2)
+        cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), color, 2)
 
-    
+    report = {}
+    return image, report
+
+    '''
     dist_boxes = []
     close_boxes = []
 
@@ -109,7 +111,7 @@ def detect(image, *, debug=True):
     close_color = (0,0,255) #BLUE, GREEN, RED - NESTE CASO VERMELHO PRA PESSOAS PRÓXIMAS
 
     if len(boxes) == 1:
-        cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), dist_color, 2)
+        cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color)
 
     image = cv2.line(image, (100,100), (100,100+threshold), dist_color,3) 
 
@@ -127,15 +129,15 @@ def detect(image, *, debug=True):
 
     
     for b in close_boxes:
-        cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), close_color, 2)
+        cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), close_color,3)
     for b in dist_boxes:
         #print(type(b))
     #        print(type(b))
-        cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), dist_color, 2)
-    
+        cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color,0)
 
     report = {}
     return image, report
+'''
 
 def __get_output_layers(net):
     
@@ -156,7 +158,7 @@ def isClose(box0,box1):
     dist = math.sqrt((pt1[0] - pt0[0])**2 + (pt1[1] - pt0[1])**2)  
     return dist <= threshold
 
-
+'''
 if __name__ == "__main__":
     from settings import *
 
@@ -186,7 +188,7 @@ if __name__ == "__main__":
     out.release()
     cv2.destroyAllWindows()
 
-
+'''
 if __name__ == "__main__":
     from settings import *
 
