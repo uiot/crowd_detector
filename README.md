@@ -31,7 +31,9 @@ pip install -r requirements.txt
 ```
 4. download YOLO's weights to `yolo_files` folder
 ```shell
-wget -O ./crowd_detector/yolo_detection/yolo_files/yolo.weights https://pjreddie.com/media/files/yolov3.weights
+wget -O ./crowd_detector/yolo_detection/yolo_files/yolo.weights
+https://pjreddie.com/media/files/yolov3.weights
+(lembrar de apagar o "v3" do nome)
 ```
 5. execute the main code
 ```shell
