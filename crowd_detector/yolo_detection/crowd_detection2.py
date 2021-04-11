@@ -79,7 +79,7 @@ def detect(image, *, debug=True):
     if not debug:
         return False
 
-    #função para remover caixas repetidas
+    #função para capturar o endereço de cada caixa repetida
     N = len(boxes)
     boxes_index = []
     boxes_index = [i for i in range (N)]
@@ -88,9 +88,9 @@ def detect(image, *, debug=True):
         if isTooClose(boxes[a0],boxes[a1]):
             if a1 not in pop_index:
                 pop_index.append(a1)
-
+    #ordena o vetor em ordem decrescente
     pop_index.sort(reverse=True)
-
+    #remove cada caixa que foi tida como repetida
     for i in range(len(pop_index)):
         aux = pop_index[i]
         boxes.pop(aux)
@@ -196,7 +196,7 @@ def isClose(box0,box1):
     pt0 = get_box_center(box0)
     pt1 = get_box_center(box1)
     dist = math.sqrt((pt1[0] - pt0[0])**2 + (pt1[1] - pt0[1])**2)  
-    return (dist <= 200)
+    return (dist <= 100)
 
 def isTooClose(box0,box1):
     pt0 = get_box_center(box0)
