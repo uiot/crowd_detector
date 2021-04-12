@@ -50,10 +50,13 @@ def detect(image, *, debug=True):
     Width = image.shape[1]
     Height = image.shape[0]
 
+    #o True espelha o RGB -----> BGR
     blob = cv2.dnn.blobFromImage(image, SCALE, (416,416), (0,0,0), True, crop=False)
 
+    #inicia a rede neural
     net.setInput(blob)
 
+    #processa a imagem na rede neural
     outs = net.forward(__get_output_layers(net))
 
     for out in outs:
@@ -79,6 +82,9 @@ def detect(image, *, debug=True):
     if not debug:
         return False
 
+    #basicamente o que essa parte faz é remover as caixas repetidas
+    #para que não haja problemas na hora de fazer reconhecimento de aglomerações
+
     #função para capturar o endereço de cada caixa repetida
     N = len(boxes)
     boxes_index = []
@@ -88,12 +94,17 @@ def detect(image, *, debug=True):
         if isTooClose(boxes[a0],boxes[a1]):
             if a1 not in pop_index:
                 pop_index.append(a1)
+
     #ordena o vetor em ordem decrescente
     pop_index.sort(reverse=True)
+
     #remove cada caixa que foi tida como repetida
     for i in range(len(pop_index)):
         aux = pop_index[i]
         boxes.pop(aux)
+    
+    #NON-MAX Supression sem utilidade no momento, já que ele apenas escondia as caixas repetidas,
+    #sem de fato apagá-las
     '''
     #aplica non-max supression
     indices = cv2.dnn.NMSBoxes(boxes, confidences, CONF_THRESHOLD, NMS_THRESHOLD)
@@ -117,21 +128,26 @@ def detect(image, *, debug=True):
 
         #cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), color, 2)
     '''
+    #criação dos vetores que receberão as as caixas que estão perto ou longe
     dist_boxes = []
     close_boxes = []
 
     dist_color = (0,255,0) #BLUE, GREEN, RED - NESTE CASO VERDE PRA PESSOAS ISOLADAS
     close_color = (0,0,255) #BLUE, GREEN, RED - NESTE CASO VERMELHO PRA PESSOAS PRÓXIMAS
 
+    #caso não haja nenhuma caixa
     if len(boxes) == 0:
         report = {}
         return image, report
-
+    
+    #caso haja apenas uma caixa
     if len(boxes) == 1:
         cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color)
 
+    #linha de referencial (no momento, sem muita utilidade)
     image = cv2.line(image, (100,100), (100,100+threshold), dist_color,3) 
 
+    #define quais caixas estão próximas ou estão isoladas e as aloca nos seus devidos vetores
     for b0,b1 in it.combinations(boxes,2):
         if isClose(b0,b1):
             c0 =get_box_center(b0)
@@ -144,11 +160,11 @@ def detect(image, *, debug=True):
             dist_boxes.append(b0)
             dist_boxes.append(b1)
 
-   
+   #pinta as caixas verdes para caixas isoladas ou veremelho para caixas aglomeradas
     for b in close_boxes:
-        cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), close_color,3)
+        cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), close_color,7)
     for b in dist_boxes:
-        cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color,0)
+        cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color,2)
     
     '''
     #código provisório pois ta acontecendo algum erro com o do marcos
@@ -196,13 +212,13 @@ def isClose(box0,box1):
     pt0 = get_box_center(box0)
     pt1 = get_box_center(box1)
     dist = math.sqrt((pt1[0] - pt0[0])**2 + (pt1[1] - pt0[1])**2)  
-    return (dist <= 100)
+    return (dist <= 175)
 
 def isTooClose(box0,box1):
     pt0 = get_box_center(box0)
     pt1 = get_box_center(box1)
     dist = math.sqrt((pt1[0] - pt0[0])**2 + (pt1[1] - pt0[1])**2)  
-    return (dist <= 32)
+    return (dist <= 40)
 
 if __name__ == "__main__":
     from settings import *
