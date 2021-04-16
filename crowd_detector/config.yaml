@@ -1,4 +1,4 @@
-frame_source: http://208.72.70.172/mjpg/1/video.mjpg
+frame_source: rtsp://admin:RNGXRQ@192.168.0.14/live/mpeg4
 
 number_of_frames: 210
 fetch_interval: 3

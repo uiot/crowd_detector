@@ -105,6 +105,7 @@ def detect(image, *, debug=True):
     
     #NON-MAX Supression sem utilidade no momento, já que ele apenas escondia as caixas repetidas,
     #sem de fato apagá-las
+    
     '''
     #aplica non-max supression
     indices = cv2.dnn.NMSBoxes(boxes, confidences, CONF_THRESHOLD, NMS_THRESHOLD)
@@ -128,6 +129,7 @@ def detect(image, *, debug=True):
 
         #cv2.rectangle(image, (round(x),round(y)), (round(x+w),round(y+h)), color, 2)
     '''
+    
     #criação dos vetores que receberão as as caixas que estão perto ou longe
     dist_boxes = []
     close_boxes = []
@@ -142,7 +144,8 @@ def detect(image, *, debug=True):
     
     #caso haja apenas uma caixa
     if len(boxes) == 1:
-        cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color)
+        for b in boxes:
+            cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color,3)
 
     #linha de referencial (no momento, sem muita utilidade)
     image = cv2.line(image, (100,100), (100,100+threshold), dist_color,3) 
@@ -164,7 +167,7 @@ def detect(image, *, debug=True):
     for b in close_boxes:
         cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), close_color,7)
     for b in dist_boxes:
-        cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color,2)
+        cv2.rectangle(image, (round(b[0]), round(b[1])), (round(b[0]+b[2]), round(b[1]+b[3])), dist_color,3)
     
     '''
     #código provisório pois ta acontecendo algum erro com o do marcos
@@ -212,14 +215,15 @@ def isClose(box0,box1):
     pt0 = get_box_center(box0)
     pt1 = get_box_center(box1)
     dist = math.sqrt((pt1[0] - pt0[0])**2 + (pt1[1] - pt0[1])**2)  
-    return (dist <= 175)
+    return (dist <= 150)
 
 def isTooClose(box0,box1):
     pt0 = get_box_center(box0)
     pt1 = get_box_center(box1)
     dist = math.sqrt((pt1[0] - pt0[0])**2 + (pt1[1] - pt0[1])**2)  
-    return (dist <= 40)
+    return (dist <= 75)
 
+'''
 if __name__ == "__main__":
     from settings import *
 
@@ -229,7 +233,7 @@ if __name__ == "__main__":
     #fourcc = cv2.cv.CV_FOURCC(*'DIVX')
     #out = cv2.VideoWriter('output.avi',fourcc, 20.0, (640,480))
     out = cv2.VideoWriter('output.avi', -1, 20.0, (640,480))
-
+    
     while(cap.isOpened()):
         ret, frame = cap.read()
         if ret==True:
@@ -248,7 +252,7 @@ if __name__ == "__main__":
     cap.release()
     out.release()
     cv2.destroyAllWindows()
-
+'''
 
 if __name__ == "__main__":
     from settings import *
@@ -260,6 +264,8 @@ if __name__ == "__main__":
         ret, frame = cap.read()
         s=frame.shape
         has_detected, final_frame = detect(frame, debug=True)
+
+        #cv2.imshow("Camera Test",final_frame)
 
         if ret:
             #cv2.imshow("frame", final_frame)
