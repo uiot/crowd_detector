@@ -25,6 +25,9 @@ import cv2
 import numpy as np
 import time
 import argparse
+import logging
+import requests
+import datetime
 
 # own modules
 import utills, plot
@@ -32,7 +35,8 @@ import utills, plot
 confid = 0.5
 thresh = 0.5
 mouse_pts = []
-
+contRiskTel = 0
+contSafeTel = 0
 
 # Function to get points for Region of Interest(ROI) and distance scale. It will take 8 points on first frame using mouse click    
 # event.First four points will define ROI where we want to moniter social distancing. Also these points should form parallel  
@@ -41,7 +45,9 @@ mouse_pts = []
 # Points should pe in pre-defined order - bottom-left, bottom-right, top-right, top-left, point 5 and 6 should form     
 # horizontal line and point 5 and 7 should form verticle line. Horizontal and vertical scale will be different. 
 
-# Function will be called on mouse events                                                          
+# Function will be called on mouse events
+
+                                                          
 
 def get_mouse_points(event, x, y, flags, param):
 
@@ -63,7 +69,6 @@ def get_mouse_points(event, x, y, flags, param):
         #print("Point detected")
         #print(mouse_pts)
         
-
 
 def calculate_social_distancing(vid_path, net, output_dir, output_vid, ln1):
     
@@ -186,7 +191,7 @@ def calculate_social_distancing(vid_path, net, output_dir, output_vid, ln1):
         
         # Draw bird eye view and frame with bouding boxes around humans according to risk factor    
         bird_image = plot.bird_eye_view(frame, distances_mat, person_points, scale_w, scale_h, risk_count)
-        img = plot.social_distancing_view(frame1, bxs_mat, boxes1, risk_count)
+        img,risco = plot.social_distancing_view(frame1, bxs_mat, boxes1, risk_count)
         
         # Show/write image and videos
         if count != 0:
@@ -197,6 +202,28 @@ def calculate_social_distancing(vid_path, net, output_dir, output_vid, ln1):
             cv2.imshow('Real Time Detection', img)
             cv2.imwrite(output_dir+"frame%d.jpg" % count, img)
             cv2.imwrite(output_dir+"bird_eye_view/frame%d.jpg" % count, bird_image)
+            cv2.imwrite(crowdetect_dir+"crowd.jpg", img)
+
+            global contRiskTel
+            global contSafeTel  
+            if risco == 1:
+                contRiskTel += 1
+                contSafeTel = 0
+
+            if risco != 1:
+                contSafeTel += 1
+
+            if contSafeTel > 20:
+                contRiskTel = 0
+
+            if contRiskTel > 30:
+                today = datetime.datetime.now()
+                pic = '.\crowdetect\crowd.jpg'
+                files = {'photo':open(pic,'rb')}
+                resp = requests.post('https://api.telegram.org/bot1759349850:AAGbf7e5nbD4zaR0MMFAdWRO7qFIqEx8v_A/sendPhoto?chat_id=152124763&caption={}'.format(today), files=files)
+                contRiskTel = 0
+                contSafeTel = 0
+
     
         count = count + 1
         if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -225,6 +252,9 @@ if __name__== "__main__":
                     
     parser.add_argument('-u', '--uop', action='store', dest='uop', default='NO',
                     help='Use open pose or not (YES/NO)')
+
+    parser.add_argument('-n', '--crowdetect_dir', action='store', dest='crowdetect_dir', default='./crowdetect/' ,
+                    help='Path for Crowd images')                
                     
     values = parser.parse_args()
     
@@ -239,6 +269,10 @@ if __name__== "__main__":
     output_vid = values.output_vid
     if output_vid[len(output_vid) - 1] != '/':
         output_vid = output_vid + '/'
+
+    crowdetect_dir = values.crowdetect_dir
+    if crowdetect_dir[len(crowdetect_dir) - 1] != '/':
+        crowdetect_dir = crowdetect_dir + '/'    
 
 
     # load Yolov3 weights
@@ -257,6 +291,3 @@ if __name__== "__main__":
     np.random.seed(42)
     
     calculate_social_distancing(values.video_path, net_yl, output_dir, output_vid, ln1)
-
-
-

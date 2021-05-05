@@ -18,6 +18,8 @@ __python_version__  = "3.5.2"
 import cv2
 import numpy as np
 
+risco = 0
+
 # Function to draw Bird Eye View for region of interest(ROI). Red, Yellow, Green points represents risk to human. 
 # Red: High Risk
 # Yellow: Low Risk
@@ -132,6 +134,10 @@ def social_distancing_view(frame, distances_mat, boxes, risk_count):
     cv2.putText(pad, "-- LOW RISK : " + str(risk_count[1]) + " people", (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 255), 1)
     cv2.putText(pad, "-- SAFE : " + str(risk_count[2]) + " people", (50,  100), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1)
     frame = np.vstack((frame,pad))
+    
+    risco = 0
+    if risk_count[0] > 1:
+        risco = 1       
             
-    return frame
+    return frame, risco
 
