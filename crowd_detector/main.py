@@ -220,7 +220,7 @@ def calculate_social_distancing(vid_path, net, output_dir, output_vid, ln1):
                 today = datetime.datetime.now()
                 pic = '.\crowdetect\crowd.jpg'
                 files = {'photo':open(pic,'rb')}
-                resp = requests.post('https://api.telegram.org/bot1759349850:AAGbf7e5nbD4zaR0MMFAdWRO7qFIqEx8v_A/sendPhoto?chat_id=152124763&caption={}'.format(today), files=files)
+                resp = requests.post('https://api.telegram.org/bot1759349850:AAGbf7e5nbD4zaR0MMFAdWRO7qFIqEx8v_A/sendPhoto?chat_id=18516628&caption={}'.format(today), files=files)
                 contRiskTel = 0
                 contSafeTel = 0
 

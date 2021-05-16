@@ -29,15 +29,16 @@ logger = logging.getLogger(__name__)
 # Define a few command handlers. These usually take the two arguments update and
 # context. Error handlers also receive the raised TelegramError object in error.
 def start(update, context):
-    """Send a message when the command /start is issued."""
-    update.message.reply_text('Hello. This chat is just to see your chat ID, so you can configure the CrowdDetector. Please, type /help to see your chat ID.')
+    update.message.reply_text('👍 Hello. This chat is just to see your chat ID, so you can configure the CrowdDetector. Please, type /help to see your chat ID.')
 
 
 def help(update, context):
     """Send a message when the command /help is issued."""
+    user = update.message.from_user
     chat_id = update.effective_chat.id
     pic = './botImgs/chatID.png'
     context.bot.send_photo(chat_id, open(pic,'rb'), caption = chat_id)
+    
 
 
 def echo(update, context):
