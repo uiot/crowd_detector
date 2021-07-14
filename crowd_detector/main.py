@@ -54,9 +54,9 @@ def get_mouse_points(event, x, y, flags, param):
     global mouse_pts
     if event == cv2.EVENT_LBUTTONDOWN:
         if len(mouse_pts) < 4:
-            cv2.circle(image, (x, y), 5, (0, 0, 255), 10)
+            cv2.circle(image, (x, y), 2, (0, 0, 255), 10)
         else:
-            cv2.circle(image, (x, y), 5, (255, 0, 0), 10)
+            cv2.circle(image, (x, y), 2, (255, 0, 0), 10)
             
         if len(mouse_pts) >= 1 and len(mouse_pts) <= 3:
             cv2.line(image, (x, y), (mouse_pts[len(mouse_pts)-1][0], mouse_pts[len(mouse_pts)-1][1]), (70, 70, 70), 2)
@@ -198,8 +198,8 @@ def calculate_social_distancing(vid_path, net, output_dir, output_vid, ln1):
             output_movie.write(img)
             bird_movie.write(bird_image)
     
-            cv2.imshow('Bird Eye View', bird_image)
-            cv2.imshow('Real Time Detection', img)
+            #cv2.imshow('Bird Eye View', bird_image)
+            #cv2.imshow('Real Time Detection', img)
             cv2.imwrite(output_dir+"frame%d.jpg" % count, img)
             cv2.imwrite(output_dir+"bird_eye_view/frame%d.jpg" % count, bird_image)
             cv2.imwrite(crowdetect_dir+"crowd.jpg", img)
@@ -220,7 +220,7 @@ def calculate_social_distancing(vid_path, net, output_dir, output_vid, ln1):
                 today = datetime.datetime.now()
                 pic = '.\crowdetect\crowd.jpg'
                 files = {'photo':open(pic,'rb')}
-                resp = requests.post('https://api.telegram.org/bot1759349850:AAGbf7e5nbD4zaR0MMFAdWRO7qFIqEx8v_A/sendPhoto?chat_id=18516628&caption={}'.format(today), files=files)
+                resp = requests.post('https://api.telegram.org/bot1759349850:AAGbf7e5nbD4zaR0MMFAdWRO7qFIqEx8v_A/sendPhoto?chat_id=152124763&caption={}'.format(today), files=files)
                 contRiskTel = 0
                 contSafeTel = 0
 
@@ -275,10 +275,10 @@ if __name__== "__main__":
         crowdetect_dir = crowdetect_dir + '/'    
 
 
-    # load Yolov3 weights
+    # load Yolov4 weights
     
-    weightsPath = model_path + "yolov3.weights"
-    configPath = model_path + "yolov3.cfg"
+    weightsPath = model_path + "yolov4-tiny.weights"
+    configPath = model_path + "yolov4-tiny.cfg"
 
     net_yl = cv2.dnn.readNetFromDarknet(configPath, weightsPath)
     ln = net_yl.getLayerNames()
