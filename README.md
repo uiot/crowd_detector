@@ -31,7 +31,7 @@ pip install -r requirements.txt
 ```
 4. download YOLO's weights to `yolo_files` folder
 ```shell
-wget -O ./crowd_detector/yolo_detection/yolo_files/yolo.weights
+wget -O ./crowd_detector/yolo_detection/yolo_files/yolo.weights \
 https://pjreddie.com/media/files/yolov3.weights
 (lembrar de apagar o "v3" do nome)
 ```
@@ -54,3 +54,10 @@ python ./crowd_detector/main.py
 - começar fase 2
 - pensar na fase 3
 - implementar a captura de frames de dentro de um diretorio
+
+## Orquestrator
+
+### Start services
+
+`docker-compose up`
+
