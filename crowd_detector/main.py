@@ -30,13 +30,19 @@ import requests
 import datetime
 
 # own modules
-import utills, plot
+import utills, plot, polygonfilter
 
 confid = 0.5
 thresh = 0.5
 mouse_pts = []
+polygonX = []
+polygonY = []
 contRiskTel = 0
 contSafeTel = 0
+countStand = 0
+startStand = 0
+indexes = []
+INT_MAX = 100000
 
 # Function to get points for Region of Interest(ROI) and distance scale. It will take 8 points on first frame using mouse click    
 # event.First four points will define ROI where we want to moniter social distancing. Also these points should form parallel  
@@ -46,17 +52,27 @@ contSafeTel = 0
 # horizontal line and point 5 and 7 should form verticle line. Horizontal and vertical scale will be different. 
 
 # Function will be called on mouse events
-
                                                           
 
 def get_mouse_points(event, x, y, flags, param):
-
     global mouse_pts
+    global polygonX
+    global polygonY
+
     if event == cv2.EVENT_LBUTTONDOWN:
         if len(mouse_pts) < 4:
             cv2.circle(image, (x, y), 2, (0, 0, 255), 10)
+            polygonX.append(x)
+            polygonY.append(y)
+            print (x)
+            print (y)
+            print('----------')
+            
         else:
             cv2.circle(image, (x, y), 2, (255, 0, 0), 10)
+            print (x)
+            print (y)
+            print('----------')
             
         if len(mouse_pts) >= 1 and len(mouse_pts) <= 3:
             cv2.line(image, (x, y), (mouse_pts[len(mouse_pts)-1][0], mouse_pts[len(mouse_pts)-1][1]), (70, 70, 70), 2)
@@ -66,6 +82,7 @@ def get_mouse_points(event, x, y, flags, param):
         if "mouse_pts" not in globals():
             mouse_pts = []
         mouse_pts.append((x, y))
+
         #print("Point detected")
         #print(mouse_pts)
         
@@ -137,7 +154,7 @@ def calculate_social_distancing(vid_path, net, output_dir, output_vid, ln1):
     
     ####################################################################################
     
-        # YOLO v3
+        # YOLOv4-tiny
         blob = cv2.dnn.blobFromImage(frame, 1 / 255.0, (416, 416), swapRB=True, crop=False)
         net.setInput(blob)
         start = time.time()
@@ -178,6 +195,24 @@ def calculate_social_distancing(vid_path, net, output_dir, output_vid, ln1):
         if len(boxes1) == 0:
             count = count + 1
             continue
+        
+        #F ilter the humans out of the polygon, deleting their bounding boxes if they are out
+        polygon = [ (polygonX[0], polygonY[0]), (polygonX[1], polygonY[1]), (polygonX[2], polygonY[2]), (polygonX[3], polygonY[3]) ]
+    
+        for i in range(len(boxes1)):
+            x,y,w,h = boxes1[i][:]
+            p = (x,(y+(h)))
+            if (polygonfilter.is_inside_polygon(points = polygon, p = p)):
+                doNothing = 0
+            else:
+                indexes.append(i)
+
+        indexes.sort(reverse=True)
+
+        for i in range(len(indexes)):
+            del boxes1[indexes[i]]
+    
+        indexes.clear()
             
         # Here we will be using bottom center point of bounding box for all boxes and will transform all those
         # bottom center points to bird eye view
@@ -191,40 +226,57 @@ def calculate_social_distancing(vid_path, net, output_dir, output_vid, ln1):
         
         # Draw bird eye view and frame with bouding boxes around humans according to risk factor    
         bird_image = plot.bird_eye_view(frame, distances_mat, person_points, scale_w, scale_h, risk_count)
-        img,risco = plot.social_distancing_view(frame1, bxs_mat, boxes1, risk_count)
+        img,risco = plot.social_distancing_view(frame1, bxs_mat, boxes1, risk_count, polygonX, polygonY)
         
         # Show/write image and videos
         if count != 0:
             output_movie.write(img)
             bird_movie.write(bird_image)
     
-            #cv2.imshow('Bird Eye View', bird_image)
-            #cv2.imshow('Real Time Detection', img)
-            cv2.imwrite(output_dir+"frame%d.jpg" % count, img)
-            cv2.imwrite(output_dir+"bird_eye_view/frame%d.jpg" % count, bird_image)
-            cv2.imwrite(crowdetect_dir+"crowd.jpg", img)
-
+            cv2.imshow('Bird Eye View', bird_image)
+            cv2.imshow('Real Time Detection', img)
+            cv2.imwrite(output_dir+"frame%d.bmp" % count, img)
+            cv2.imwrite(output_dir+"bird_eye_view/frame%d.bmp" % count, bird_image)
+            
+            global countStand
             global contRiskTel
-            global contSafeTel  
-            if risco == 1:
+            global contSafeTel
+            global safeOrquestrator
+            global riskyOrquestrator
+            global startStand
+            
+            safeOrquestrator = 15
+            riskyOrquestrator = 10
+            
+            if startStand == 1:
+                countStand += 1
+
+            if countStand == 10:
+                startStand = 0
+                countStand = 0            
+
+            if (risco == 1)*(startStand == 0):
                 contRiskTel += 1
-                contSafeTel = 0
+                contSafeTel = 0                
 
-            if risco != 1:
+            if (risco != 1)*(startStand == 0):
                 contSafeTel += 1
-
-            if contSafeTel > 20:
+            
+            if contSafeTel > safeOrquestrator:
                 contRiskTel = 0
-
-            if contRiskTel > 30:
-                today = datetime.datetime.now()
-                pic = '.\crowdetect\crowd.jpg'
-                files = {'photo':open(pic,'rb')}
-                resp = requests.post('https://api.telegram.org/bot1759349850:AAGbf7e5nbD4zaR0MMFAdWRO7qFIqEx8v_A/sendPhoto?chat_id=152124763&caption={}'.format(today), files=files)
+            
+            if contRiskTel > riskyOrquestrator:
+                #today = datetime.datetime.now()
+                #pic = '.\crowdetect\crowd.bmp'
+                #files = {'photo':open(pic,'rb')}
+                #resp = requests.post('https://api.telegram.org/bot1759349850:AAGbf7e5nbD4zaR0MMFAdWRO7qFIqEx8v_A/sendPhoto?chat_id=152124763&caption={}'.format(today), files=files)
+                cv2.imwrite(crowdetect_dir+"sent-crowd%d.bmp" % count, img)
+                startStand = 1
                 contRiskTel = 0
                 contSafeTel = 0
+                
+            
 
-    
         count = count + 1
         if cv2.waitKey(1) & 0xFF == ord('q'):
             break
@@ -272,9 +324,8 @@ if __name__== "__main__":
 
     crowdetect_dir = values.crowdetect_dir
     if crowdetect_dir[len(crowdetect_dir) - 1] != '/':
-        crowdetect_dir = crowdetect_dir + '/'    
-
-
+        crowdetect_dir = crowdetect_dir + '/' 
+        
     # load Yolov4 weights
     
     weightsPath = model_path + "yolov4-tiny.weights"
